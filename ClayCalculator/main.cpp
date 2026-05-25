@@ -29,7 +29,7 @@ void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     cin >> sampleMass;
 
     try { validator.validateSampleMass(sampleMass); }
-    catch (string& error) {
+    catch (const char* error) {
         cout << error << endl;
         return;
     }
@@ -38,7 +38,7 @@ void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     cin >> clayMass;
 
     try { validator.validateClayMass(clayMass, sampleMass); }
-    catch(string& error) {
+    catch(const char* error) {
         cout << error << endl;
         return;
     }
