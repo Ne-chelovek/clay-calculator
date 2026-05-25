@@ -1,0 +1,7 @@
+ClayCalculator/*.txt
+.git
+.vs
+ClayCalculator/*.vcxproj*
+ClayCalculator/x64
+x64
+*.slnx
