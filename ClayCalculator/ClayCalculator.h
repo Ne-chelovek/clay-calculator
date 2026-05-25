@@ -2,39 +2,32 @@
 
 #include <vector>
 
-namespace ClayCalculatorApp {
+struct Determination {
+    double sampleMass = 0.0;  // Mass of initial sample (g)
+    double clayMass = 0.0;    // Mass of clay clumps (g)
+    double clayContent = 0.0; // Calculated clay content (%)
 
-    struct Determination
-    {
-        double sampleMass;  // Mass of initial sample (g)
-        double clayMass;    // Mass of clay clumps (g)
-        double clayContent; // Calculated clay content (%)
-
-        Determination() : sampleMass(0), clayMass(0), clayContent(0) {}
-        Determination(double sample, double clay)
+    Determination() = default;
+    Determination(double sample, double clay)
             : sampleMass(sample), clayMass(clay), clayContent(0) {
-        }
-    };
+    }
+};
 
-    class ClayCalculator
-    {
-    private:
-        std::vector<Determination> determinations;
-        double averageContent;
+class ClayCalculator {
+private:
+    std::vector<Determination> determinations;
+    double averageContent;
 
-    public:
-        ClayCalculator();
-        ~ClayCalculator();
+public:
+    ClayCalculator();
 
-        void AddDetermination(double sampleMass, double clayMass);
-        bool CalculateAll();
-        double GetAverageContent() const;
-        double GetClayContent(int index) const;
-        double GetMinContent() const;
-        double GetMaxContent() const;
-        int GetCount() const;
-        void Clear();
-        const std::vector<Determination>& GetDeterminations() const;
-    };
-
-} // namespace ClayCalculatorApp
+    void addDetermination(double sampleMass, double clayMass);
+    bool calculateAll();
+    double getAverageContent() const;
+    double getClayContent(size_t index) const;
+    double getMinContent() const;
+    double getMaxContent() const;
+    size_t getCount() const;
+    const std::vector<Determination>& getDeterminations() const;
+    void clear();
+};

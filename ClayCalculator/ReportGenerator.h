@@ -4,32 +4,21 @@
 #include <vector>
 #include "ClayCalculator.h"
 
-namespace ClayCalculatorApp {
+class ReportGenerator {
+private:
+    std::string operatorName;
+    std::string timestamp;
 
-    class ReportGenerator
-    {
-    private:
-        std::string operatorName;
-        std::string timestamp;
+public:
+    ReportGenerator();
 
-    public:
-        ReportGenerator();
-        ~ReportGenerator();
+    void setOperatorName(const std::string& name) { operatorName = name; }
 
-        // Set operator info
-        void SetOperatorName(const std::string& name) { operatorName = name; }
-        void UpdateTimestamp();
+    void updateTimestamp();
 
-        // Generate report
-        std::string GenerateReport(const ClayCalculator& calculator,
-            const std::string& complianceStatus);
+    std::string generateReport(const ClayCalculator& calculator,
+                               const std::string& complianceStatus);
 
-        // Save to file
-        bool SaveToFile(const std::string& filename,
-            const std::string& reportContent);
-
-        // Get timestamp
-        std::string GetTimestamp() const { return timestamp; }
-    };
-
-} // namespace ClayCalculatorApp
+    bool saveToFile(const std::string& filename,
+                    const std::string& reportContent);
+};
