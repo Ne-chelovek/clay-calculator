@@ -4,12 +4,10 @@
 #include "ClayCalculator.h"
 #include "ResultValidator.h"
 #include "ReportGenerator.h"
-
+#include "Exceptions.h"
 using namespace std;
-using namespace ClayCalculatorApp;
 
-void DisplayMenu()
-{
+void DisplayMenu() {
     cout << "\n========================================\n";
     cout << "    CLAY CONTENT CALCULATOR (GOST)\n";
     cout << "========================================\n";
@@ -18,69 +16,69 @@ void DisplayMenu()
     cout << "3. View current data\n";
     cout << "4. Save protocol\n";
     cout << "5. Clear all data\n";
-    cout << "6. Exit\n";
+    cout << "0. Exit\n";
     cout << "========================================\n";
     cout << "Choose option: ";
 }
 
-void AddDetermination(ClayCalculator& calc, ResultValidator& validator)
-{
+void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     double sampleMass, clayMass;
-    string errorMsg;
 
     cout << "\n--- Add Determination ---\n";
     cout << "Enter sample mass (g): ";
     cin >> sampleMass;
 
-    if (!validator.ValidateSampleMass(sampleMass, errorMsg))
-    {
-        cout << "ERROR: " << errorMsg << "\n";
+    try { validator.validateSampleMass(sampleMass); }
+    catch (const Exception& ex) {
+        cout << ex.what() << endl;
         return;
     }
 
     cout << "Enter clay mass (g): ";
     cin >> clayMass;
 
-    if (!validator.ValidateClayMass(clayMass, sampleMass, errorMsg))
-    {
-        cout << "ERROR: " << errorMsg << "\n";
+    try { validator.validateClayMass(clayMass, sampleMass); }
+    catch (const Exception& ex) {
+        cout << ex.what() << endl;
         return;
     }
 
-    calc.AddDetermination(sampleMass, clayMass);
+    calc.addDetermination(sampleMass, clayMass);
     cout << "Determination added successfully!\n";
 }
 
-void CalculateResults(ClayCalculator& calc, ResultValidator& validator)
-{
-    if (calc.GetCount() == 0)
+void CalculateResults(ClayCalculator& calc, ResultValidator& validator) {
+    if (!calc.getCount())
     {
         cout << "ERROR: No determinations to calculate!\n";
         return;
     }
 
-    if (!calc.CalculateAll())
+    if (!calc.calculateAll())
     {
         cout << "ERROR: Calculation failed!\n";
         return;
     }
 
-    double average = calc.GetAverageContent();
-    string status = validator.GetComplianceStatus(average);
+    double average = calc.getAverageContent();
+    ostringstream limits;
+    limits << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
+    string range = limits.str();
+    string status = validator.isCompliant(average)
+                    ? "COMPLIES with standard (" + range + "%)"
+                    : "DOES NOT COMPLY with standard (" + range + "%)";
 
     cout << "\n========== RESULTS ==========\n";
-    cout << "Number of determinations: " << calc.GetCount() << "\n";
+    cout << "Number of determinations: " << calc.getCount() << "\n";
     cout << "Average clay content: " << fixed << setprecision(2) << average << "%\n";
-    cout << "Minimum value: " << fixed << setprecision(2) << calc.GetMinContent() << "%\n";
-    cout << "Maximum value: " << fixed << setprecision(2) << calc.GetMaxContent() << "%\n";
+    cout << "Minimum value: " << fixed << setprecision(2) << calc.getMinContent() << "%\n";
+    cout << "Maximum value: " << fixed << setprecision(2) << calc.getMaxContent() << "%\n";
     cout << "Status: " << status << "\n";
     cout << "=============================\n";
 }
 
-void ViewData(ClayCalculator& calc)
-{
-    if (calc.GetCount() == 0)
-    {
+void ViewData(ClayCalculator& calc) {
+    if (!calc.getCount()) {
         cout << "No data to display.\n";
         return;
     }
@@ -90,9 +88,8 @@ void ViewData(ClayCalculator& calc)
         << setw(20) << "Clay Mass (g)" << setw(20) << "Clay Content (%)\n";
     cout << "==================================\n";
 
-    const auto& dets = calc.GetDeterminations();
-    for (size_t i = 0; i < dets.size(); ++i)
-    {
+    const auto& dets = calc.getDeterminations();
+    for (size_t i = 0; i < dets.size(); ++i) {
         cout << setw(5) << (i + 1)
             << setw(20) << fixed << setprecision(2) << dets[i].sampleMass
             << setw(20) << fixed << setprecision(2) << dets[i].clayMass
@@ -101,37 +98,38 @@ void ViewData(ClayCalculator& calc)
     cout << "==================================\n";
 }
 
-void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenerator& report)
-{
-    if (calc.GetCount() == 0)
-    {
+void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenerator& report) {
+    if (!calc.getCount()) {
         cout << "ERROR: No data to save!\n";
         return;
     }
 
     string operatorName;
     cout << "Enter operator name: ";
-    cin.ignore();
+    cin.ignore(); // remove \n
     getline(cin, operatorName);
 
-    report.SetOperatorName(operatorName);
-    report.UpdateTimestamp();
+    report.setOperatorName(operatorName);
+    report.updateTimestamp();
 
-    double average = calc.GetAverageContent();
-    string status = validator.GetComplianceStatus(average);
+    double average = calc.getAverageContent();
+    ostringstream limits;
+    limits << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
+    string range = limits.str();
+    string status = validator.isCompliant(average)
+                    ? "COMPLIES with standard (" + range + "%)"
+                    : "DOES NOT COMPLY with standard (" + range + "%)";
 
-    string reportContent = report.GenerateReport(calc, status);
+    string reportContent = report.generateReport(calc, status);
     string filename = "clay_report_" + to_string(time(nullptr)) + ".txt";
 
-    if (report.SaveToFile(filename, reportContent))
+    if (report.saveToFile(filename, reportContent))
     {
         cout << "Protocol saved to: " << filename << "\n";
         cout << "\n" << reportContent;
     }
     else
-    {
         cout << "ERROR: Failed to save protocol!\n";
-    }
 }
 
 int main()
@@ -152,7 +150,7 @@ int main()
         switch (choice)
         {
         case 1:
-            AddDetermination(calc, validator);
+            addDetermination(calc, validator);
             break;
         case 2:
             CalculateResults(calc, validator);
@@ -164,16 +162,14 @@ int main()
             SaveProtocol(calc, validator, report);
             break;
         case 5:
-            calc.Clear();
+            calc.clear();
             cout << "All data cleared!\n";
             break;
-        case 6:
+        case 0:
             cout << "Goodbye!\n";
             return 0;
         default:
             cout << "Invalid option. Try again.\n";
         }
     }
-
-    return 0;
 }

@@ -1,7 +1,10 @@
-ClayCalculator/*.txt
+src/*.txt
 .git
 .vs
-ClayCalculator/*.vcxproj*
-ClayCalculator/x64
+src/*.vcxproj*
+src/x64
 x64
 *.slnx
+.idea
+src/*.exe
+
