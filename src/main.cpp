@@ -4,7 +4,7 @@
 #include "ClayCalculator.h"
 #include "ResultValidator.h"
 #include "ReportGenerator.h"
-
+#include "Exceptions.h"
 using namespace std;
 
 void DisplayMenu() {
@@ -29,8 +29,8 @@ void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     cin >> sampleMass;
 
     try { validator.validateSampleMass(sampleMass); }
-    catch (const char* error) {
-        cout << error << endl;
+    catch (const Exception& ex) {
+        cout << ex.what() << endl;
         return;
     }
 
@@ -38,8 +38,8 @@ void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     cin >> clayMass;
 
     try { validator.validateClayMass(clayMass, sampleMass); }
-    catch(const char* error) {
-        cout << error << endl;
+    catch (const Exception& ex) {
+        cout << ex.what() << endl;
         return;
     }
 

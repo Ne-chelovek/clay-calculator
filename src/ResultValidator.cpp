@@ -1,18 +1,17 @@
 #include "ResultValidator.h"
-
-#include <iostream>
+#include "Exceptions.h"
 
 bool ResultValidator::validateSampleMass(double mass) {
     if (mass <= 0)
-        throw "Sample mass must be positive!";
+        throw NegativeMassException("Sample mass cannot be negative!");
     return true;
 }
 
 bool ResultValidator::validateClayMass(double clayMass, double sampleMass) {
     if (clayMass < 0)
-        throw "Clay mass cannot be negative!";
+        throw NegativeMassException("Clay mass cannot be negative!");
     if (clayMass > sampleMass)
-        throw "Clay mass cannot exceed sample mass!";
+        throw MassExceedException("Clay mass cannot exceed sample mass!");
     return true;
 }
 
