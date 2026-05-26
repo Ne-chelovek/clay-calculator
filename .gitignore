@@ -7,4 +7,7 @@ x64
 *.slnx
 .idea
 src/*.exe
+build/
+cmake-build-debug/
+cmake-build-release/
 
