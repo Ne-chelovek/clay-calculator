@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
+#include <ctime>
 #include "ClayCalculator.h"
 #include "ResultValidator.h"
 #include "ReportGenerator.h"
@@ -61,9 +63,9 @@ void CalculateResults(ClayCalculator& calc, ResultValidator& validator) {
     }
 
     double average = calc.getAverageContent();
-    ostringstream limits;
-    limits << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
-    string range = limits.str();
+    ostringstream limit;
+    limit << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
+    string range = limit.str();
     string status = validator.isCompliant(average)
                     ? "COMPLIES with standard (" + range + "%)"
                     : "DOES NOT COMPLY with standard (" + range + "%)";
@@ -113,9 +115,9 @@ void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenera
     report.updateTimestamp();
 
     double average = calc.getAverageContent();
-    ostringstream limits;
-    limits << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
-    string range = limits.str();
+    ostringstream limit;
+    limit << fixed << setprecision(0) << ResultValidator::getMinLimit() << "-" << ResultValidator::getMaxLimit();
+    string range = limit.str();
     string status = validator.isCompliant(average)
                     ? "COMPLIES with standard (" + range + "%)"
                     : "DOES NOT COMPLY with standard (" + range + "%)";
@@ -135,7 +137,6 @@ void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenera
 int main()
 {
     setlocale(LC_ALL, "ru_RU.UTF-8");
-
     ClayCalculator calc;
     ResultValidator validator;
     ReportGenerator report;
