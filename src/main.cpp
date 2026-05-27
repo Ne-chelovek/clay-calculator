@@ -46,21 +46,17 @@ void addDetermination(ClayCalculator& calc, ResultValidator& validator) {
     }
 
     calc.addDetermination(sampleMass, clayMass);
+    calc.calculateAll();
     cout << "Determination added successfully!\n";
 }
 
 void CalculateResults(ClayCalculator& calc, ResultValidator& validator) {
     if (!calc.getCount())
     {
-        cout << "ERROR: No determinations to calculate!\n";
+        cout << "No determinations to calculate!\n";
         return;
     }
-
-    if (!calc.calculateAll())
-    {
-        cout << "ERROR: Calculation failed!\n";
-        return;
-    }
+    calc.calculateAll();
 
     double average = calc.getAverageContent();
     ostringstream limit;
@@ -102,7 +98,7 @@ void ViewData(ClayCalculator& calc) {
 
 void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenerator& report) {
     if (!calc.getCount()) {
-        cout << "ERROR: No data to save!\n";
+        cout << "No data to save!\n";
         return;
     }
 
@@ -131,7 +127,7 @@ void SaveProtocol(ClayCalculator& calc, ResultValidator& validator, ReportGenera
         cout << "\n" << reportContent;
     }
     else
-        cout << "ERROR: Failed to save protocol!\n";
+        cout << "Failed to save protocol!\n";
 }
 
 int main()
