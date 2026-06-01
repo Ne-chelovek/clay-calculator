@@ -417,50 +417,46 @@ bool SaveToCSV(HWND hwnd, const std::string& filename) {
         return false;
     }
 
-    // Заголовок отчёта
+    const char DELIM = ';';
+
     file << "Clay Content Test Report\n";
     file << "GOST 8269.0-97, Paragraph 4.6\n";
     file << "\n";
-    file << "Operator," << operatorName << "\n";
-    file << "Date/Time," << dateBuffer << "\n";
+    file << "Operator" << DELIM << operatorName << "\n";
+    file << "Date/Time" << DELIM << dateBuffer << "\n";
     file << "\n";
 
-    // Таблица с данными
-    file << "No.,Sample Mass (g),Clay Mass (g),Clay Content (%)\n";
+    file << "No." << DELIM << "Sample Mass (g)" << DELIM << "Clay Mass (g)" << DELIM << "Clay Content (%)\n";
 
     const auto& dets = calculator.getDeterminations();
     for (size_t i = 0; i < dets.size(); ++i) {
-        file << (i + 1) << ","
-            << std::fixed << std::setprecision(2) << dets[i].sampleMass << ","
-            << dets[i].clayMass << ","
-            << dets[i].clayContent << "\n";
+        file << (i + 1) << DELIM
+             << std::fixed << std::setprecision(2) << dets[i].sampleMass << DELIM
+             << dets[i].clayMass << DELIM
+             << dets[i].clayContent << "\n";
     }
 
-    // Статистика
     file << "\n";
     file << "Statistics:\n";
-    file << "Average," << calculator.getAverageContent() << "\n";
-    file << "Minimum," << calculator.getMinContent() << "\n";
-    file << "Maximum," << calculator.getMaxContent() << "\n";
-    file << "Number of determinations," << calculator.getCount() << "\n";
+    file << "Average" << DELIM << calculator.getAverageContent() << "\n";
+    file << "Minimum" << DELIM << calculator.getMinContent() << "\n";
+    file << "Maximum" << DELIM << calculator.getMaxContent() << "\n";
+    file << "Number of determinations" << DELIM << calculator.getCount() << "\n";
 
-    // Статус соответствия
     file << "\n";
-    file << "Compliance Status:,";
+    file << "Compliance Status" << DELIM;
     if (validator.isCompliant(calculator.getAverageContent())) {
         file << "COMPLIES with standard (0-5%)\n";
-    }
-    else {
+    } else {
         file << "DOES NOT COMPLY with standard (0-5%)\n";
     }
 
-    // Информация о стандарте
     file << "\n";
     file << "GOST 8269.0-97 Standard Information:\n";
-    file << "Paragraph,4.6 - Determination of clay content\n";
-    file << "Standard limits,0% to 5%\n";
-    file << "Calculation formula,M = m1 / m2 * 100%\n";
-    file << "where,\n";
+    file << "Paragraph" << DELIM << "4.6 - Determination of clay content\n";
+    file << "Standard limits" << DELIM << "0% to 5%\n";
+    file << "Calculation formula" << DELIM << "M = m1 / m2 * 100%\n";
+    file << "where" << DELIM << "\n";
     file << "m1 - mass of clay clumps (g)\n";
     file << "m2 - mass of initial sample (g)\n";
 
@@ -516,7 +512,7 @@ void ImportFromCSV(HWND hwnd) {
         std::string token;
         std::vector<std::string> tokens;
 
-        while (std::getline(ss, token, ',')) {
+        while (std::getline(ss, token, ';')) {
             tokens.push_back(token);
         }
 
