@@ -6,11 +6,6 @@ project(ClayCalculator)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Для Windows GUI приложения
-if(WIN32)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
-endif()
-
 # Находим все исходные файлы в папке src
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
@@ -24,8 +19,3 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gdi32
     shell32
 )
-
-# Если всё же нужны заголовки xlnt (но не линковка), можно оставить
-# target_include_directories(${PROJECT_NAME} PRIVATE
-#     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/xlnt/include
-# )
