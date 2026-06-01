@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Создание окна
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "Clay Content Calculator - GOST 8269.0-97",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 750, 550,
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 750, 550,
         NULL, NULL, hInstance, NULL
     );
 
