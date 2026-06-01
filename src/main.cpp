@@ -295,8 +295,6 @@ void AddDetermination(HWND hwnd) {
     SetWindowText(hEditClay, "");
 
     UpdateDisplay();
-
-    MessageBox(hwnd, "Determination added successfully!", "Success", MB_OK);
 }
 
 void UpdateDisplay() {
