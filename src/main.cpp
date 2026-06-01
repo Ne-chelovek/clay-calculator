@@ -42,7 +42,7 @@ HWND hEditSample, hEditClay, hEditOperator;
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void AddDetermination(HWND hwnd);
 void UpdateDisplay();
-void ClearAll();
+void ClearAll(HWND hwnd);
 void SaveProtocol(HWND hwnd);
 void ExportToExcel(HWND hwnd);
 void ImportFromCSV(HWND hwnd);
@@ -206,7 +206,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             AddDetermination(hwnd);
             break;
         case IDC_BTN_CLEAR:
-            ClearAll();
+            ClearAll(hwnd);
             break;
         case IDC_BTN_SAVE:
             SaveProtocol(hwnd);
@@ -359,11 +359,11 @@ void AddToListView(const Determination& det, int index) {
     ListView_SetItemText(hListResults, index - 1, 3, buffer);
 }
 
-void ClearAll() {
-    if (MessageBox(NULL, "Clear all data?", "Confirm", MB_YESNO) == IDYES) {
+void ClearAll(HWND hwnd) {
+    if (MessageBox(hwnd, "Clear all data?", "Confirm", MB_YESNO) == IDYES) {
         calculator.clear();
         UpdateDisplay();
-        MessageBox(NULL, "All data cleared!", "Success", MB_OK);
+        MessageBox(hwnd, "All data cleared!", "Success", MB_OK);
     }
 }
 
