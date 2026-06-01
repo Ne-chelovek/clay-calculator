@@ -13,8 +13,12 @@
 class ClayCalculatorTest : public ::testing::Test {
 protected:
     ClayCalculator calc;
-
 };
+
+TEST_F(ClayCalculatorTest, InitiallyEmpty) {
+EXPECT_EQ(calc.getCount(), 0);
+EXPECT_DOUBLE_EQ(calc.getAverageContent(), 0.0);
+}
 
 TEST_F(ClayCalculatorTest, AddDetermination) {
 calc.addDetermination(100.0, 5.0);
