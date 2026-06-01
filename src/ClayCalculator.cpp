@@ -1,7 +1,7 @@
 #include "ClayCalculator.h"
 #include <cmath>
 
-ClayCalculator::ClayCalculator() : averageContent(0) { }
+ClayCalculator::ClayCalculator() : averageContent(0) {}
 
 void ClayCalculator::addDetermination(double sampleMass, double clayMass) {
     determinations.push_back(Determination(sampleMass, clayMass));
@@ -9,14 +9,16 @@ void ClayCalculator::addDetermination(double sampleMass, double clayMass) {
 
 bool ClayCalculator::calculateAll() {
     if (determinations.empty()) return false;
+
     double sum = 0;
     for (auto& det : determinations) {
         if (det.sampleMass <= 0) return false;
         det.clayContent = (det.clayMass / det.sampleMass) * 100.0;
         sum += det.clayContent;
     }
-        averageContent = sum / determinations.size();
-        return true;
+
+    averageContent = sum / determinations.size();
+    return true;
 }
 
 double ClayCalculator::getAverageContent() const {
