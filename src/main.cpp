@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <ctime>
 #include <fstream>
+#include <algorithm>
 #include "ClayCalculator.h"
 #include "ResultValidator.h"
 #include "ReportGenerator.h"
@@ -15,19 +16,19 @@
 
 // Константы для идентификаторов элементов управления
 #define IDC_BTN_ADD        1001
-#define IDC_BTN_CALC       1002
-#define IDC_BTN_CLEAR      1003
-#define IDC_BTN_SAVE       1004
-#define IDC_BTN_EXCEL      1005
-#define IDC_EDIT_SAMPLE    1006
-#define IDC_EDIT_CLAY      1007
-#define IDC_LIST_RESULTS   1008
-#define IDC_STATIC_AVG     1009
-#define IDC_STATIC_MIN     1010
-#define IDC_STATIC_MAX     1011
-#define IDC_STATIC_STATUS  1012
-#define IDC_EDIT_OPERATOR  1013
-#define IDC_BTN_INFO       1014
+#define IDC_BTN_CLEAR      1002
+#define IDC_BTN_SAVE       1003
+#define IDC_BTN_EXCEL      1004
+#define IDC_EDIT_SAMPLE    1005
+#define IDC_EDIT_CLAY      1006
+#define IDC_LIST_RESULTS   1007
+#define IDC_STATIC_AVG     1008
+#define IDC_STATIC_MIN     1009
+#define IDC_STATIC_MAX     1010
+#define IDC_STATIC_STATUS  1011
+#define IDC_EDIT_OPERATOR  1012
+#define IDC_BTN_INFO       1013
+#define IDC_BTN_IMPORT     1014
 
 // Глобальные объекты
 ClayCalculator calculator;
@@ -40,14 +41,14 @@ HWND hEditSample, hEditClay, hEditOperator;
 // Прототипы функций
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void AddDetermination(HWND hwnd);
-void CalculateResults();
 void UpdateDisplay();
 void ClearAll();
 void SaveProtocol(HWND hwnd);
 void ExportToExcel(HWND hwnd);
+void ImportFromCSV(HWND hwnd);
 void ShowInformation(HWND hwnd);
 void AddToListView(const Determination& det, int index);
-std::string GetCurrentTimestamp();
+bool SaveToCSV(HWND hwnd, const std::string& filename);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     // Инициализация common controls
@@ -112,21 +113,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         hEditClay = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER,
             130, 70, 100, 25, hwnd, (HMENU)IDC_EDIT_CLAY, NULL, NULL);
 
-        // Кнопки
+        // Кнопки в ряд (слева направо)
         CreateWindow("BUTTON", "Add Determination", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             10, 105, 150, 30, hwnd, (HMENU)IDC_BTN_ADD, NULL, NULL);
 
-        CreateWindow("BUTTON", "Calculate Results", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            170, 105, 150, 30, hwnd, (HMENU)IDC_BTN_CALC, NULL, NULL);
-
         CreateWindow("BUTTON", "Clear All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            330, 105, 100, 30, hwnd, (HMENU)IDC_BTN_CLEAR, NULL, NULL);
+            170, 105, 100, 30, hwnd, (HMENU)IDC_BTN_CLEAR, NULL, NULL);
 
         CreateWindow("BUTTON", "Save Protocol", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            440, 105, 110, 30, hwnd, (HMENU)IDC_BTN_SAVE, NULL, NULL);
+            280, 105, 110, 30, hwnd, (HMENU)IDC_BTN_SAVE, NULL, NULL);
 
         CreateWindow("BUTTON", "Export to Excel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            560, 105, 120, 30, hwnd, (HMENU)IDC_BTN_EXCEL, NULL, NULL);
+            400, 105, 120, 30, hwnd, (HMENU)IDC_BTN_EXCEL, NULL, NULL);
+
+        // Кнопка Import Excel (после Export to Excel)
+        CreateWindow("BUTTON", "Import Excel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            530, 105, 110, 30, hwnd, (HMENU)IDC_BTN_IMPORT, NULL, NULL);
 
         // Оператор
         CreateWindow("STATIC", "Operator:", WS_CHILD | WS_VISIBLE,
@@ -203,9 +205,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case IDC_BTN_ADD:
             AddDetermination(hwnd);
             break;
-        case IDC_BTN_CALC:
-            CalculateResults();
-            break;
         case IDC_BTN_CLEAR:
             ClearAll();
             break;
@@ -214,6 +213,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
         case IDC_BTN_EXCEL:
             ExportToExcel(hwnd);
+            break;
+        case IDC_BTN_IMPORT:
+            ImportFromCSV(hwnd);
             break;
         case IDC_BTN_INFO:
             ShowInformation(hwnd);
@@ -224,10 +226,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
     case WM_CLOSE: {
         if (calculator.getCount() > 0) {
-            int result = MessageBox(hwnd, "Save data before exit?", "Confirm", MB_YESNOCANCEL);
+            int result = MessageBox(hwnd,
+                "Do you want to save the current data as CSV (Excel format) before exiting?",
+                "Save on Exit",
+                MB_YESNOCANCEL | MB_ICONQUESTION);
+
             if (result == IDYES) {
-                SaveProtocol(hwnd);
-                DestroyWindow(hwnd);
+                if (SaveToCSV(hwnd, "")) {
+                    DestroyWindow(hwnd);
+                }
+                return 0;
             }
             else if (result == IDNO) {
                 DestroyWindow(hwnd);
@@ -281,7 +289,7 @@ void AddDetermination(HWND hwnd) {
     }
 
     calculator.addDetermination(sampleMass, clayMass);
-    calculator.calculateAll();
+    calculator.calculateAll(); // Автоматический пересчёт
 
     SetWindowText(hEditSample, "");
     SetWindowText(hEditClay, "");
@@ -289,16 +297,6 @@ void AddDetermination(HWND hwnd) {
     UpdateDisplay();
 
     MessageBox(hwnd, "Determination added successfully!", "Success", MB_OK);
-}
-
-void CalculateResults() {
-    if (calculator.getCount() == 0) {
-        MessageBox(NULL, "No determinations to calculate!", "Warning", MB_OK);
-        return;
-    }
-
-    calculator.calculateAll();
-    UpdateDisplay();
 }
 
 void UpdateDisplay() {
@@ -400,93 +398,171 @@ void SaveProtocol(HWND hwnd) {
     }
 }
 
-// Функция для экспорта в Excel (создаёт CSV файл, который открывается в Excel)
+bool SaveToCSV(HWND hwnd, const std::string& filename) {
+    char operatorName[256];
+    GetWindowText(hEditOperator, operatorName, 256);
+
+    time_t now = time(nullptr);
+    struct tm timeInfo;
+    localtime_s(&timeInfo, &now);
+    char dateBuffer[64];
+    strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d %H:%M:%S", &timeInfo);
+
+    std::string actualFilename = filename;
+    if (actualFilename.empty()) {
+        actualFilename = "clay_export_" + std::to_string(now) + ".csv";
+    }
+
+    std::ofstream file(actualFilename);
+    if (!file.is_open()) {
+        if (hwnd) MessageBox(hwnd, "Failed to create file!\nCheck if you have write permissions.", "Error", MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Заголовок отчёта
+    file << "Clay Content Test Report\n";
+    file << "GOST 8269.0-97, Paragraph 4.6\n";
+    file << "\n";
+    file << "Operator," << operatorName << "\n";
+    file << "Date/Time," << dateBuffer << "\n";
+    file << "\n";
+
+    // Таблица с данными
+    file << "No.,Sample Mass (g),Clay Mass (g),Clay Content (%)\n";
+
+    const auto& dets = calculator.getDeterminations();
+    for (size_t i = 0; i < dets.size(); ++i) {
+        file << (i + 1) << ","
+            << std::fixed << std::setprecision(2) << dets[i].sampleMass << ","
+            << dets[i].clayMass << ","
+            << dets[i].clayContent << "\n";
+    }
+
+    // Статистика
+    file << "\n";
+    file << "Statistics:\n";
+    file << "Average," << calculator.getAverageContent() << "\n";
+    file << "Minimum," << calculator.getMinContent() << "\n";
+    file << "Maximum," << calculator.getMaxContent() << "\n";
+    file << "Number of determinations," << calculator.getCount() << "\n";
+
+    // Статус соответствия
+    file << "\n";
+    file << "Compliance Status:,";
+    if (validator.isCompliant(calculator.getAverageContent())) {
+        file << "COMPLIES with standard (0-5%)\n";
+    }
+    else {
+        file << "DOES NOT COMPLY with standard (0-5%)\n";
+    }
+
+    // Информация о стандарте
+    file << "\n";
+    file << "GOST 8269.0-97 Standard Information:\n";
+    file << "Paragraph,4.6 - Determination of clay content\n";
+    file << "Standard limits,0% to 5%\n";
+    file << "Calculation formula,M = m1 / m2 * 100%\n";
+    file << "where,\n";
+    file << "m1 - mass of clay clumps (g)\n";
+    file << "m2 - mass of initial sample (g)\n";
+
+    file.close();
+
+    if (hwnd) {
+        std::string msg = "Data exported to: " + actualFilename;
+        MessageBox(hwnd, msg.c_str(), "Export Complete", MB_OK);
+    }
+    return true;
+}
+
 void ExportToExcel(HWND hwnd) {
     if (calculator.getCount() == 0) {
         MessageBox(hwnd, "No data to export!", "Warning", MB_OK);
         return;
     }
+    SaveToCSV(hwnd, "");
+}
 
-    try {
-        char operatorName[256];
-        GetWindowText(hEditOperator, operatorName, 256);
+void ImportFromCSV(HWND hwnd) {
+    OPENFILENAME ofn = {};
+    char fileName[MAX_PATH] = "";
 
-        time_t now = time(nullptr);
-        struct tm timeInfo;
-        localtime_s(&timeInfo, &now);
-        char dateBuffer[64];
-        strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d %H:%M:%S", &timeInfo);
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrTitle = "Open CSV File";
 
-        std::string filename = "clay_export_" + std::to_string(now) + ".csv";
-        std::ofstream file(filename);
-
-        if (!file.is_open()) {
-            MessageBox(hwnd, "Failed to create file!", "Error", MB_OK | MB_ICONERROR);
-            return;
-        }
-
-        // Заголовок отчёта
-        file << "Clay Content Test Report\n";
-        file << "GOST 8269.0-97, Paragraph 4.6\n";
-        file << "\n";
-        file << "Operator," << operatorName << "\n";
-        file << "Date/Time," << dateBuffer << "\n";
-        file << "\n";
-
-        // Таблица с данными
-        file << "No.,Sample Mass (g),Clay Mass (g),Clay Content (%)\n";
-
-        const auto& dets = calculator.getDeterminations();
-        for (size_t i = 0; i < dets.size(); ++i) {
-            file << (i + 1) << ","
-                << std::fixed << std::setprecision(2) << dets[i].sampleMass << ","
-                << dets[i].clayMass << ","
-                << dets[i].clayContent << "\n";
-        }
-
-        // Статистика
-        file << "\n";
-        file << "Statistics:\n";
-        file << "Average," << calculator.getAverageContent() << "\n";
-        file << "Minimum," << calculator.getMinContent() << "\n";
-        file << "Maximum," << calculator.getMaxContent() << "\n";
-        file << "Number of determinations," << calculator.getCount() << "\n";
-
-        // Статус соответствия
-        file << "\n";
-        file << "Compliance Status:,";
-        if (validator.isCompliant(calculator.getAverageContent())) {
-            file << "COMPLIES with standard (0-5%)\n";
-        }
-        else {
-            file << "DOES NOT COMPLY with standard (0-5%)\n";
-        }
-
-        // Информация о стандарте
-        file << "\n";
-        file << "GOST 8269.0-97 Standard Information:\n";
-        file << "Paragraph,4.6 - Determination of clay content\n";
-        file << "Standard limits,0% to 5%\n";
-        file << "Calculation formula,M = m1 / m2 * 100%\n";
-        file << "where,\n";
-        file << "m1 - mass of clay clumps (g)\n";
-        file << "m2 - mass of initial sample (g)\n";
-
-        file.close();
-
-        std::string msg = "Data exported to: " + filename +
-            "\n\nThis is a CSV file that can be opened in Excel.\n"
-            "The file contains all measurements, statistics, and GOST information.";
-        MessageBox(hwnd, msg.c_str(), "Export Complete", MB_OK);
-
+    if (GetOpenFileName(&ofn) == FALSE) {
+        return;
     }
-    catch (const std::exception& e) {
-        std::string errorMsg = "Failed to export: " + std::string(e.what());
-        MessageBox(hwnd, errorMsg.c_str(), "Export Error", MB_OK | MB_ICONERROR);
+
+    std::ifstream file(fileName);
+    if (!file.is_open()) {
+        MessageBox(hwnd, "Failed to open file!", "Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    calculator.clear();
+
+    std::string line;
+    bool inDataSection = false;
+    int measurementsLoaded = 0;
+
+    while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
+        std::stringstream ss(line);
+        std::string token;
+        std::vector<std::string> tokens;
+
+        while (std::getline(ss, token, ',')) {
+            tokens.push_back(token);
+        }
+
+        if (tokens.size() >= 4 && tokens[0] == "No." && tokens[1] == "Sample Mass (g)") {
+            inDataSection = true;
+            continue;
+        }
+
+        if (inDataSection && tokens.size() >= 4) {
+            char* endptr;
+            double sampleMass = strtod(tokens[1].c_str(), &endptr);
+            double clayMass = strtod(tokens[2].c_str(), &endptr);
+
+            if ((sampleMass > 0 || tokens[1] == "0") && (clayMass >= 0)) {
+                try {
+                    validator.validateSampleMass(sampleMass);
+                    validator.validateClayMass(clayMass, sampleMass);
+                    calculator.addDetermination(sampleMass, clayMass);
+                    measurementsLoaded++;
+                }
+                catch (const Exception&) {}
+            }
+        }
+
+        if (tokens.size() >= 1 && tokens[0] == "Statistics:") {
+            break;
+        }
+    }
+
+    file.close();
+
+    if (measurementsLoaded > 0) {
+        calculator.calculateAll();
+        UpdateDisplay();
+
+        char msg[256];
+        sprintf_s(msg, "Successfully imported %d measurements from:\n%s", measurementsLoaded, fileName);
+        MessageBox(hwnd, msg, "Import Successful", MB_OK | MB_ICONINFORMATION);
+    }
+    else {
+        MessageBox(hwnd, "No valid measurements found in the file!", "Import Failed", MB_OK | MB_ICONERROR);
     }
 }
 
-// Функция для отображения информационного окна
 void ShowInformation(HWND hwnd) {
     std::string infoText =
         "Project Information\n\n"
@@ -496,6 +572,11 @@ void ShowInformation(HWND hwnd) {
         "  m1 - mass of clay clumps (g)\n"
         "  m2 - mass of initial sample (g)\n\n"
         "Standard limits: 0% to 5%\n\n"
+        "Features:\n"
+        "  - Automatic calculation when adding/importing data\n"
+        "  - Export to CSV (Excel compatible)\n"
+        "  - Import from CSV files\n"
+        "  - Auto-save prompt on exit\n\n"
         "Developed for laboratory testing of crushed stone\n"
         "and gravel for clay content determination.";
 
