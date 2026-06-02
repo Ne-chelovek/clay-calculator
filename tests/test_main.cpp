@@ -58,6 +58,14 @@ EXPECT_EQ(dets.size(), 1);
 EXPECT_DOUBLE_EQ(dets[0].sampleMass, 100.0);
 }
 
+TEST_F(ClayCalculatorTest, GetCalculations) {
+    calc.addDetermination(100.0, 5.0);
+    calc.addDetermination(200.0, 5.0);
+    calc.calculateAll();
+    EXPECT_EQ(calc.getCalculations()[0], "100.0 / 5.0 = 5.0");
+    EXPECT_EQ(calc.getCalculations()[1], "200.0 / 5.0 = 2.5");
+}
+
 TEST_F(ClayCalculatorTest, ClearMethod) {
 calc.addDetermination(100.0, 5.0);
 calc.calculateAll();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 struct Determination {
     double sampleMass = 0.0;  // Mass of initial sample (g)
@@ -27,6 +28,7 @@ public:
     double getClayContent(size_t index) const;
     double getMinContent() const;
     double getMaxContent() const;
+    std::vector<std::string> getCalculations();
     size_t getCount() const;
     const std::vector<Determination>& getDeterminations() const;
     void clear();

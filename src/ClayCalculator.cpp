@@ -1,5 +1,10 @@
 #include "ClayCalculator.h"
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+
+using std::vector, std::string, std::to_string, std::ostringstream;
+
 
 ClayCalculator::ClayCalculator() : averageContent(0) {}
 
@@ -60,4 +65,17 @@ const std::vector<Determination>& ClayCalculator::getDeterminations() const {
 void ClayCalculator::clear() {
     determinations.clear();
     averageContent = 0;
+}
+
+vector<string> ClayCalculator::getCalculations() {
+    vector<string> results;
+    for (const auto& det : determinations) {
+        ostringstream oss;
+        oss << std::fixed << std::setprecision(1)
+            << det.sampleMass << " / "
+            << det.clayMass << " = "
+            << det.clayContent;
+        results.push_back(oss.str());
+    }
+    return results;
 }
