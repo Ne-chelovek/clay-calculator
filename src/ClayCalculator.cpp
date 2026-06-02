@@ -1,4 +1,5 @@
 #include "ClayCalculator.h"
+#include "Determination.h"
 #include <cmath>
 #include <sstream>
 #include <iomanip>

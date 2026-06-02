@@ -10,6 +10,7 @@
 #include "ClayCalculator.h"
 #include "ResultValidator.h"
 #include "ReportGenerator.h"
+#include "Determination.h"
 #include "Exceptions.h"
 
 #pragma comment(lib, "comctl32.lib")
