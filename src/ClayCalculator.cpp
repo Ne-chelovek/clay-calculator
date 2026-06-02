@@ -72,9 +72,10 @@ vector<string> ClayCalculator::getCalculations() {
     for (const auto& det : determinations) {
         ostringstream oss;
         oss << std::fixed << std::setprecision(1)
-            << det.sampleMass << " / "
-            << det.clayMass << " = "
-            << det.clayContent;
+            << det.clayMass << " / "
+            << det.sampleMass  <<
+            " * 100%"<< " = "
+            << det.clayContent << "%";
         results.push_back(oss.str());
     }
     return results;
