@@ -9,7 +9,7 @@ private:
     xlnt::worksheet ws;
     size_t offset = 0;
     void writeHeader(const std::string& operatorName);
-    void writeFooter();
+    void writeFooter(const std::vector<Determination>& dets);
     void writeData(const Determination& det);
 public:
     XLSXmanager();

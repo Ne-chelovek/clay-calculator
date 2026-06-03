@@ -5,6 +5,7 @@
 #include <sstream>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 
 using namespace xlnt;
 
@@ -13,6 +14,7 @@ XLSXmanager::XLSXmanager(): ws(wb.active_sheet()) {
     ws.column_properties(2).width = 28;
     ws.column_properties(3).width = 12;
     ws.column_properties(4).width = 12;
+    ws.column_properties(5).width = 28;
 }
 
 void XLSXmanager::createTable(const std::vector<Determination>& dets, const std::string& operatorName, const std::string& filename) {
@@ -20,7 +22,7 @@ void XLSXmanager::createTable(const std::vector<Determination>& dets, const std:
     for (const auto & det : dets) {
         this->writeData(det);
     }
-    this->writeFooter();
+    this->writeFooter(dets);
     wb.save(filename);
 }
 
@@ -45,7 +47,7 @@ void XLSXmanager::writeHeader(const std::string& opName) {
     this->ws.cell("D7").value("Clay Content");
 }
 
-void XLSXmanager::writeFooter() {
+void XLSXmanager::writeFooter(const std::vector<Determination>& dets) {
     std::ostringstream formula;
     this->ws.cell(1, 9 + offset).value("Statistics:");
 
@@ -54,6 +56,13 @@ void XLSXmanager::writeFooter() {
     formula << "=SUM(D8:D" << 8 + offset - 1 << ")/" << offset;
     this->ws.cell(2, 10 + offset).formula(formula.str());
     this->ws.cell(2, 10 + offset).number_format(number_format("0.00%"));
+    formula.str("");
+    formula << "(";
+    for (size_t i = 0; i < dets.size() - 1; i++) {
+        formula << dets[i].clayContent << "+";
+    }
+    formula << dets[dets.size() - 1].clayContent << ")/" << offset;
+    this->ws.cell(3, 10 + offset).value(formula.str());
 
     this->ws.cell(1, 11 + offset).value("Minimum");
     formula.str("");
@@ -97,6 +106,9 @@ void XLSXmanager::writeData(const Determination& det) {
     formula << "=C" << 8 + offset << "/B" << 8 + offset;
     this->ws.cell(4, 8 + offset).formula(formula.str());
     this->ws.cell(4, 8 + offset).number_format(number_format("0.00%"));
+    formula.str("");
+    formula << std::fixed << std::setprecision(2) << det.clayMass << " / " << det.sampleMass << " * 100% = " << det.clayContent;
+    this->ws.cell(5, 8 + offset).value(formula.str());
     this->offset++;
 }
 
