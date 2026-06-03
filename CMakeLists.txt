@@ -6,6 +6,14 @@ project(ClayCalculator)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Принудительный выбор MinGW на Windows
+if(WIN32 AND NOT DEFINED CMAKE_GENERATOR)
+    set(CMAKE_GENERATOR "MinGW Makefiles" CACHE STRING "CMake generator" FORCE)
+    set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ compiler" FORCE)
+    set(CMAKE_C_COMPILER "gcc" CACHE STRING "C compiler" FORCE)
+    message(STATUS "🔧 Forcing MinGW generator")
+endif()
+
 # --- XLNT Общие настройки (выносим в переменные)
 set(XLNT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/xlnt/include)
 set(XLNT_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/xlnt/lib)
@@ -14,16 +22,6 @@ set(XLNT_LIBRARIES
         ${XLNT_LIB_DIR}/libfmt.a
 )
 
-# Принудительно используем MinGW если доступен
-if(WIN32 AND NOT DEFINED CMAKE_GENERATOR)
-    find_program(MINGW_MAKE mingw32-make)
-    if(MINGW_MAKE)
-        set(CMAKE_GENERATOR "MinGW Makefiles" CACHE STRING "CMake generator" FORCE)
-        set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ compiler" FORCE)
-        set(CMAKE_C_COMPILER "gcc" CACHE STRING "C compiler" FORCE)
-        message(STATUS "Using MinGW compiler")
-    endif()
-endif()
 
 # Находим все исходные файлы в папке src
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
