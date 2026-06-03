@@ -230,7 +230,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     case WM_CLOSE: {
         if (calculator.getCount() > 0) {
             int result = MessageBox(hwnd,
-                "Do you want to save the current data as CSV (Excel format) before exiting?",
+                "Do you want to save the current data as XLSX (Excel format) before exiting?",
                 "Save on Exit",
                 MB_YESNOCANCEL | MB_ICONQUESTION);
 
