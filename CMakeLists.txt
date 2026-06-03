@@ -14,6 +14,17 @@ set(XLNT_LIBRARIES
         ${XLNT_LIB_DIR}/libfmt.a
 )
 
+# Принудительно используем MinGW если доступен
+if(WIN32 AND NOT DEFINED CMAKE_GENERATOR)
+    find_program(MINGW_MAKE mingw32-make)
+    if(MINGW_MAKE)
+        set(CMAKE_GENERATOR "MinGW Makefiles" CACHE STRING "CMake generator" FORCE)
+        set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ compiler" FORCE)
+        set(CMAKE_C_COMPILER "gcc" CACHE STRING "C compiler" FORCE)
+        message(STATUS "Using MinGW compiler")
+    endif()
+endif()
+
 # Находим все исходные файлы в папке src
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
